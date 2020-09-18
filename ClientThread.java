@@ -1,7 +1,5 @@
 import java.rmi.Naming;
 import java.rmi.RemoteException;
-import java.rmi.registry.LocateRegistry;
-import java.util.*;
 
 /*Aqui falta arrumar pra chamar só o método que é passado */
 public class ClientThread extends Thread {
@@ -15,7 +13,7 @@ public class ClientThread extends Thread {
 	public void run() {
 
 		String remoteHostName = thread_args[0];
-		String connectLocation = "rmi://" + remoteHostName + ":8000/server_if";
+		String connectLocation = "rmi://" + remoteHostName + ":3000/server_if";
 
 		JogoInterface server_if = null;
 		try {

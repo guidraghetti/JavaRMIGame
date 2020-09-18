@@ -9,6 +9,10 @@ import java.util.concurrent.TimeUnit;
 /*Descobrir como fazer Two way communication com RMI, pois o exemplo passado só comunica do cliente para o servidor */
 
 public class Server extends UnicastRemoteObject implements JogoInterface {
+    /**
+     *
+     */
+
     class Player {
         public int id;
         public int plays;
@@ -54,14 +58,14 @@ public class Server extends UnicastRemoteObject implements JogoInterface {
 
         try {
             System.setProperty("java.rmi.server.hostname", args[0]);
-            LocateRegistry.createRegistry(8000);
+            LocateRegistry.createRegistry(3000);
             System.out.println("java RMI registry created.");
         } catch (RemoteException e) {
             System.out.println("java RMI registry already exists.");
         }
 
         try {
-            String server = "rmi://" + args[0] + ":8000/server_if";
+            String server = "rmi://" + args[0] + ":3000/server_if";
             Naming.rebind(server, new Server());
             System.out.println("Server is ready.");
         } catch (Exception e) {
@@ -95,8 +99,10 @@ public class Server extends UnicastRemoteObject implements JogoInterface {
     public static void run() {
             for (Player player : playersList) {
                 remoteHostName = player.playerIp;
-                String connectLocation = "rmi://" + remoteHostName + ":8000/client_if";
+                System.out.println(player.playerIp);
+                String connectLocation = "rmi://" + remoteHostName + ":3001/client_if";
                 JogadorInterface client_if = null;
+                System.out.println("Iniciando jogo jogador " + player.id);
                 try {
                     client_if = (JogadorInterface) Naming.lookup(connectLocation);
                     client_if.initializeGame();
@@ -117,7 +123,7 @@ public class Server extends UnicastRemoteObject implements JogoInterface {
                 player.plays++;
                 if (player.plays >= maxPlays) {
                     remoteHostName = player.playerIp;
-                    String connectLocation = "rmi://" + remoteHostName + ":8000/client_if";
+                    String connectLocation = "rmi://" + remoteHostName + ":3001/client_if";
                     JogadorInterface client_if = null;
                     try {
                         client_if = (JogadorInterface) Naming.lookup(connectLocation);
@@ -147,7 +153,7 @@ public class Server extends UnicastRemoteObject implements JogoInterface {
             TimeUnit.SECONDS.sleep(3);
             for (Player player : playersList) {
                 remoteHostName = player.playerIp;
-                String connectLocation = "rmi://" + remoteHostName + ":8000/client_if";
+                String connectLocation = "rmi://" + remoteHostName + ":3001/client_if";
                 JogadorInterface client_if = null;
                 try {
                     client_if = (JogadorInterface) Naming.lookup(connectLocation);

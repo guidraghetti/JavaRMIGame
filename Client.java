@@ -25,11 +25,18 @@ public class Client implements JogadorInterface {
         player = args[2];
 		try {
 			System.setProperty("java.rmi.server.hostname", args[1]);
-			LocateRegistry.createRegistry(8000);
+			LocateRegistry.createRegistry(3001);
 			System.out.println("java RMI registry created.");
 		} catch (RemoteException e) {
 			System.out.println("java RMI registry already exists.");
-		}
+        }
+        try {
+            String client = "rmi://" + args[1] + ":3001/client_if";
+            Naming.rebind(client, new Server());
+            System.out.println("Client is ready.");
+        } catch (Exception e) {
+            System.out.println("ClientFailed: " + e);
+        }
 
 		 new ClientThread(args, 0).start();
     }
