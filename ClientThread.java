@@ -6,13 +6,13 @@ import java.util.*;
 /*Aqui falta arrumar pra chamar só o método que é passado */
 public class ClientThread extends Thread {
 	protected String[] thread_args;
-	
-	public ClientThread(String[] args) {
+	private int method;
+	public ClientThread(String[] args, int method) {
 		thread_args = args;
+		this.method = method;
 	}
 
 	public void run() {
-		int result = 0;
 
 		String remoteHostName = thread_args[0];
 		String connectLocation = "rmi://" + remoteHostName + ":8000/server_if";
@@ -26,30 +26,32 @@ public class ClientThread extends Thread {
 			e.printStackTrace();
 		}
 
-		// try {
-			
-		// 	result = server_if.register(thread_args[2], args[1]);
-		// 	System.out.println("register() successful, id: " + result);
-		// } catch (RemoteException e) {
-		// 	e.printStackTrace();
-		// }
-
-
-		// List<Integer> ids = new ArrayList<>();
-		// try {
-		// 	ids = server_if.list_query(result);
-		// } catch (RemoteException e) {
-		// 	e.printStackTrace();
-		// }
-			
-		// for (int i = 0; i < ids.size(); i++)
-		// 	System.out.println("user id: " + ids.get(i));
-
-		// try {
-		// 	String nick = server_if.id_query(result, ids.get(0));
-		// 	System.out.println("First: " + nick);
-		// } catch (RemoteException e) {
-		// 	e.printStackTrace();
-		// }
+		
+		switch (method) {
+			case 0:
+				try {
+					int result = server_if.register(Integer.parseInt(thread_args[2]), thread_args[1]);
+					System.out.println("register() successful, id: " + result);
+				} catch (RemoteException e) {
+					e.printStackTrace();
+				}
+				break;
+			case 1:
+				try {
+					server_if.play(Integer.parseInt(thread_args[2]));
+					System.out.println("Jogador " + thread_args[2] + " jogou!");
+				} catch (RemoteException e) {
+					e.printStackTrace();
+				}
+				break;
+			case 3: 
+				try {
+					server_if.quitGame(Integer.parseInt(thread_args[2]));
+					System.out.println("Jogo Encerrado");
+				} catch (RemoteException e) {
+					e.printStackTrace();
+				}
+				break;
+		}
 	}
 }
