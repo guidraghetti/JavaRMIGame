@@ -1,11 +1,11 @@
-package src;
-
 import java.rmi.Naming;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.rmi.registry.LocateRegistry;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 
 
 
@@ -13,9 +13,6 @@ import java.util.concurrent.TimeUnit;
 /*Descobrir como fazer Two way communication com RMI, pois o exemplo passado só comunica do cliente para o servidor */
 
 public class Server extends UnicastRemoteObject implements JogoInterface {
-    /**
-     *
-     */
 
     class Player {
         public int id;
@@ -42,6 +39,7 @@ public class Server extends UnicastRemoteObject implements JogoInterface {
     }
 
     private static volatile String remoteHostName;
+    private static volatile String localHostName;
     private static volatile List<Player> playersList = new ArrayList<Player>();
     public static volatile int maxPlayers;
     public static volatile int maxPlays;
@@ -52,17 +50,23 @@ public class Server extends UnicastRemoteObject implements JogoInterface {
     }
 
     public static void main(String[] args) throws RemoteException, InterruptedException {
-        if (args.length != 3) {
+        if (args.length != 2) {
             System.out.println("Para executar digite:");
-            System.out.println("java Server <server ip> <nº de jogadores> <nº de jogadas>");
+            System.out.println("java Server <nº de jogadores> <nº de jogadas>");
             System.exit(1);
 
         }
-        maxPlayers = Integer.parseInt(args[1]);
-        maxPlays = Integer.parseInt(args[2]);
 
         try {
-            System.setProperty("java.rmi.server.hostname", args[0]);
+            localHostName = InetAddress.getLocalHost().getHostName();
+        }
+        catch(UnknownHostException e){}
+
+        maxPlayers = Integer.parseInt(args[0]);
+        maxPlays = Integer.parseInt(args[1]);
+
+        try {
+            System.setProperty("java.rmi.server.hostname", localHostName);
             LocateRegistry.createRegistry(3000);
             System.out.println("java RMI registry created.");
         } catch (RemoteException e) {
@@ -70,7 +74,7 @@ public class Server extends UnicastRemoteObject implements JogoInterface {
         }
 
         try {
-            String server = "rmi://" + args[0] + ":3000/server_if";
+            String server = "rmi://" + localHostName + ":3000/server_if";
             Naming.rebind(server, new Server());
             System.out.println("Server is ready.");
         } catch (Exception e) {
@@ -111,11 +115,14 @@ public class Server extends UnicastRemoteObject implements JogoInterface {
     }
 
     public int play(int playerId) {
-        for (Player player : playersList) {
-            if (player.getId() == playerId) {
-                player.plays++;
-                if (player.plays >= maxPlays) {
-                    remoteHostName = player.playerIp;
+
+        Iterator<Player> iterator = playersList.iterator();
+        while(iterator.hasNext()) {
+            Player p = iterator.next();
+            if (p.getId() == playerId) {
+                p.plays++;
+                if (p.plays >= maxPlays) {
+                    remoteHostName = p.playerIp;
                     String connectLocation = "rmi://" + remoteHostName + ":3001/client_if";
                     JogadorInterface client_if = null;
                     try {
@@ -131,9 +138,11 @@ public class Server extends UnicastRemoteObject implements JogoInterface {
     }
 
     public int quitGame(int playerId) {
-        for (Player player : playersList) {
-            if (player.getId() == playerId) {
-                playersList.remove(player);
+        Iterator<Player> iterator = playersList.iterator();
+        while(iterator.hasNext()) {
+            Player p = iterator.next();
+            if (p.getId() == playerId) {
+                iterator.remove();
             }
         }
 
