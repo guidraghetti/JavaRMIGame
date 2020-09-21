@@ -4,20 +4,13 @@ import java.rmi.server.UnicastRemoteObject;
 import java.rmi.registry.LocateRegistry;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-
-
-
-/*Falta terminar de implementar os métodos e chamar o client */
-/*Descobrir como fazer Two way communication com RMI, pois o exemplo passado só comunica do cliente para o servidor */
 
 public class Server extends UnicastRemoteObject implements JogoInterface {
 
     class Player {
-        public int id;
+        private int id;
         public int plays;
-        public String playerIp;
+        private String playerIp;
 
         public Player(int id, int plays, String playerIp) {
             this.id = id;
@@ -36,11 +29,12 @@ public class Server extends UnicastRemoteObject implements JogoInterface {
         public String getIp() {
             return this.playerIp;
         }
+
     }
 
     private static volatile List<Player> playersList = new ArrayList<Player>();
-    public static volatile int maxPlayers;
-    public static volatile int maxPlays;
+    private static volatile int maxPlayers;
+    private static volatile int maxPlays;
     private static Random playerId = new Random();
 
     public Server() throws RemoteException {
@@ -61,66 +55,79 @@ public class Server extends UnicastRemoteObject implements JogoInterface {
         try {
             System.setProperty("java.rmi.server.hostname", args[0]);
             LocateRegistry.createRegistry(3000);
-            System.out.println("java RMI registry created.");
+            System.out.println("Registro RMI criado!");
         } catch (RemoteException e) {
-            System.out.println("java RMI registry already exists.");
+            System.out.println("Registro RMI já exitste!");
         }
 
         try {
             String server = "rmi://" + args[0] + ":3000/server_if";
             Naming.rebind(server, new Server());
-            System.out.println("Server is ready.");
+            System.out.println("Servidor rodando!");
         } catch (Exception e) {
-            System.out.println("Serverfailed: " + e);
+            System.out.println("Falha ao instanciar servidor: " + e);
         }
-        
-        while(playersList.size() < maxPlayers)
-        {
-        	Thread.sleep(500);
+
+        while (playersList.size() < maxPlayers) {
+            Thread.sleep(500);
         }
-        
+
         run();
-        
+
     }
 
     public int register(String playerIp) {
-    	int id = playerId.nextInt();
-        Player player = new Player(id, 0, playerIp);
-        playersList.add(player);
-        System.out.println("Jogador " + id + " adicionado");            
-        return id;       
+        if (playersList.size() <= maxPlayers) {
+            int id = playerId.nextInt();
+            Player player = new Player(id, 0, playerIp);
+            playersList.add(player);
+            System.out.println("Jogador " + id + " adicionado");
+            return id;
+        }
+        return -1;
     }
 
     public static void run() {
         for (Player player : playersList) {
-            
-            String connectLocation = "rmi://" + player.playerIp + ":3001/client_if";
+
+            String connectLocation = "rmi://" + player.getIp() + ":3001/client_if";
             JogadorInterface client_if = null;
-            System.out.println("Iniciando jogo jogador " + player.id);
+            System.out.println("Iniciando jogo do jogador " + player.getId());
             try {
                 client_if = (JogadorInterface) Naming.lookup(connectLocation);
                 client_if.initializeGame();
             } catch (Exception e) {
                 e.printStackTrace();
             }
-        }        
+        }
 
         try {
             wakeUpPlayer();
         } catch (Exception e) {
             e.printStackTrace();
-        }    
+        }
     }
 
     public int play(int playerId) {
-
         Iterator<Player> iterator = playersList.iterator();
-        while(iterator.hasNext()) {
+        while (iterator.hasNext()) {
             Player p = iterator.next();
             if (p.getId() == playerId) {
                 p.plays++;
+                System.out.println("Jogador " + p.getId() + " jogou!");
                 if (p.plays >= maxPlays) {
-                    String connectLocation = "rmi://" + p.playerIp + ":3001/client_if";
+                    String connectLocation = "rmi://" + p.getIp() + ":3001/client_if";
+                    JogadorInterface client_if = null;
+                    try {
+                        client_if = (JogadorInterface) Naming.lookup(connectLocation);
+                        client_if.finalizeGame();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+                int probability = (int) (Math.random() * (100 - 1)) + 1;
+                if (probability == 1) {
+                    String connectLocation = "rmi://" + p.getIp() + ":3001/client_if";
                     JogadorInterface client_if = null;
                     try {
                         client_if = (JogadorInterface) Naming.lookup(connectLocation);
@@ -136,30 +143,28 @@ public class Server extends UnicastRemoteObject implements JogoInterface {
 
     public int quitGame(int playerId) {
         Iterator<Player> iterator = playersList.iterator();
-        while(iterator.hasNext()) {
+        while (iterator.hasNext()) {
             Player p = iterator.next();
             if (p.getId() == playerId) {
                 iterator.remove();
             }
         }
-
         System.out.println("Jogador " + playerId + " desconectado");
         return 0;
     }
 
-    public static void wakeUpPlayer() throws InterruptedException {        
-        while(!playersList.isEmpty()) {            
+    public static void wakeUpPlayer() throws InterruptedException {
+        while (!playersList.isEmpty()) {
             TimeUnit.SECONDS.sleep(3);
             for (Player player : playersList) {
-                
-                String connectLocation = "rmi://" + player.playerIp + ":3001/client_if";
+                String connectLocation = "rmi://" + player.getIp() + ":3001/client_if";
                 JogadorInterface client_if = null;
                 try {
                     client_if = (JogadorInterface) Naming.lookup(connectLocation);
                     client_if.sendHello();
-                    System.out.println("id running: " + player.id);
+                    System.out.println("Jogador " + player.getId() + " está online!");
                 } catch (Exception e) {
-                    System.out.println("Verify client failed: ");
+                    System.out.println("Falha ao verificar o jogador " + player.getId());
                     e.printStackTrace();
                 }
             }
