@@ -20,7 +20,7 @@ public class Client extends UnicastRemoteObject implements JogadorInterface {
 	
 		if (args.length != 2) {
 			System.out.println("Para executar digite:");
-			System.out.println("java Server <server ip> <your ip>");
+			System.out.println("java Server <server ip> <seu ip>");
 			System.exit(1);
 		}
 
@@ -48,7 +48,7 @@ public class Client extends UnicastRemoteObject implements JogadorInterface {
 			e.printStackTrace();
 		}
 		try {
-			playerId = server_if.register(args[1]);
+			playerId = server_if.register();
 			if(playerId == -1) {
 				System.out.println("O jogo já iniciou. Você não pode se registrar!");
 			}

@@ -1,5 +1,6 @@
 import java.rmi.Naming;
 import java.rmi.RemoteException;
+import java.rmi.server.ServerNotActiveException;
 import java.rmi.server.UnicastRemoteObject;
 import java.rmi.registry.LocateRegistry;
 import java.util.*;
@@ -76,13 +77,18 @@ public class Server extends UnicastRemoteObject implements JogoInterface {
 
     }
 
-    public int register(String playerIp) {
-        if (playersList.size() <= maxPlayers) {
-            int id = playerId.nextInt();
-            Player player = new Player(id, 0, playerIp);
-            playersList.add(player);
-            System.out.println("Jogador " + id + " adicionado");
-            return id;
+    public int register() {
+        try {
+            if (playersList.size() <= maxPlayers) {
+                int id = playerId.nextInt();
+                Player player = new Player(id, 0, getClientHost());
+                playersList.add(player);
+                System.out.println("Jogador " + id + " adicionado");
+                return id;
+            }
+            return -1;
+        } catch (Exception e) {
+            e.printStackTrace();
         }
         return -1;
     }
