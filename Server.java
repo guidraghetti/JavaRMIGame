@@ -94,6 +94,7 @@ public class Server extends UnicastRemoteObject implements JogoInterface {
 
     public static void run() {
         for (Player player : playersList) {
+            
             remoteHostName = player.playerIp;
             System.out.println(player.playerIp);
             String connectLocation = "rmi://" + remoteHostName + ":3001/client_if";
@@ -105,7 +106,14 @@ public class Server extends UnicastRemoteObject implements JogoInterface {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-        }            
+        }        
+
+        System.out.println("saiu");
+        try {
+            wakeUpPlayer();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }    
     }
 
     public int play(int playerId) {
@@ -144,8 +152,8 @@ public class Server extends UnicastRemoteObject implements JogoInterface {
         return 0;
     }
 
-    public static void wakeUpPlayer() throws InterruptedException {
-        while(!playersList.isEmpty()) {
+    public static void wakeUpPlayer() throws InterruptedException {        
+        while(!playersList.isEmpty()) {            
             TimeUnit.SECONDS.sleep(3);
             for (Player player : playersList) {
                 remoteHostName = player.playerIp;
@@ -154,6 +162,7 @@ public class Server extends UnicastRemoteObject implements JogoInterface {
                 try {
                     client_if = (JogadorInterface) Naming.lookup(connectLocation);
                     client_if.sendHello();
+                    System.out.println("id running: " + player.id);
                 } catch (Exception e) {
                     System.out.println("Verify client failed: ");
                     e.printStackTrace();
