@@ -127,6 +127,7 @@ public class Server extends UnicastRemoteObject implements JogoInterface {
                 }
                 int probability = (int) (Math.random() * (100 - 1)) + 1;
                 if (probability == 1) {
+                    System.out.println("Jogador " + p.getId() + " caiu no 1%");
                     String connectLocation = "rmi://" + p.getIp() + ":3001/client_if";
                     JogadorInterface client_if = null;
                     try {
@@ -169,6 +170,9 @@ public class Server extends UnicastRemoteObject implements JogoInterface {
                 }
             }
         }
+        System.out.println("Jogo encerrado!");
+        System.out.println("Desligando servidor ...");
+        System.exit(1);
     }
 
 }
