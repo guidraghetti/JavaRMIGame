@@ -5,13 +5,10 @@ import java.rmi.registry.LocateRegistry;
 import java.util.concurrent.TimeUnit;
 import java.lang.Math;
 import java.rmi.server.UnicastRemoteObject;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 
 public class Client extends UnicastRemoteObject implements JogadorInterface {
 
     private static boolean condition = false;
-    private static String remoteHostName;
     private static int playerId;
     private static String connectLocation;
     private static JogoInterface server_if = null;
@@ -26,18 +23,17 @@ public class Client extends UnicastRemoteObject implements JogadorInterface {
 			System.exit(1);
         }
 
-		remoteHostName = args[1];
-		connectLocation = "rmi://" + remoteHostName + ":3000/server_if";
+		connectLocation = "rmi://" + args[0] + ":3000/server_if";
 
 		try {
-			System.setProperty("java.rmi.server.hostname", remoteHostName);
+			System.setProperty("java.rmi.server.hostname", args[1]);
 			LocateRegistry.createRegistry(3001);
 			System.out.println("java RMI registry created.");
 		} catch (RemoteException e) {
 			System.out.println("java RMI registry already exists.");
         }
         try {
-            String client = "rmi://" + remoteHostName + ":3001/client_if";
+            String client = "rmi://" + args[1] + ":3001/client_if";
             Naming.rebind(client, new Client());
             System.out.println("Client is ready.");
         } catch (Exception e) {
@@ -51,7 +47,7 @@ public class Client extends UnicastRemoteObject implements JogadorInterface {
 			e.printStackTrace();
 		}
 		try {
-			playerId = server_if.register(remoteHostName);
+			playerId = server_if.register(args[1]);
 			System.out.println("register() successful, id: " + playerId);
 		} catch (RemoteException e) {
 			e.printStackTrace();

@@ -38,7 +38,6 @@ public class Server extends UnicastRemoteObject implements JogoInterface {
         }
     }
 
-    private static volatile String remoteHostName;
     private static volatile List<Player> playersList = new ArrayList<Player>();
     public static volatile int maxPlayers;
     public static volatile int maxPlays;
@@ -95,9 +94,7 @@ public class Server extends UnicastRemoteObject implements JogoInterface {
     public static void run() {
         for (Player player : playersList) {
             
-            remoteHostName = player.playerIp;
-            System.out.println(player.playerIp);
-            String connectLocation = "rmi://" + remoteHostName + ":3001/client_if";
+            String connectLocation = "rmi://" + player.playerIp + ":3001/client_if";
             JogadorInterface client_if = null;
             System.out.println("Iniciando jogo jogador " + player.id);
             try {
@@ -108,7 +105,6 @@ public class Server extends UnicastRemoteObject implements JogoInterface {
             }
         }        
 
-        System.out.println("saiu");
         try {
             wakeUpPlayer();
         } catch (Exception e) {
@@ -124,8 +120,7 @@ public class Server extends UnicastRemoteObject implements JogoInterface {
             if (p.getId() == playerId) {
                 p.plays++;
                 if (p.plays >= maxPlays) {
-                    remoteHostName = p.playerIp;
-                    String connectLocation = "rmi://" + remoteHostName + ":3001/client_if";
+                    String connectLocation = "rmi://" + p.playerIp + ":3001/client_if";
                     JogadorInterface client_if = null;
                     try {
                         client_if = (JogadorInterface) Naming.lookup(connectLocation);
@@ -156,8 +151,8 @@ public class Server extends UnicastRemoteObject implements JogoInterface {
         while(!playersList.isEmpty()) {            
             TimeUnit.SECONDS.sleep(3);
             for (Player player : playersList) {
-                remoteHostName = player.playerIp;
-                String connectLocation = "rmi://" + remoteHostName + ":3001/client_if";
+                
+                String connectLocation = "rmi://" + player.playerIp + ":3001/client_if";
                 JogadorInterface client_if = null;
                 try {
                     client_if = (JogadorInterface) Naming.lookup(connectLocation);
